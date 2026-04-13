@@ -132,9 +132,27 @@
             position: absolute; top: 40px; left: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transform: translateY(-20px); transition: all 1s ease 0.5s;
         }
         .active .huge-stat-box { opacity: 1; transform: translateY(0); }
+
+        /* First Click Overlay */
+        #start-overlay {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.6); z-index: 9999; backdrop-filter: blur(5px);
+            transition: opacity 0.5s ease;
+        }
+        .start-text {
+            font-family: sans-serif; font-size: 2rem; color: rgba(255,255,255,0.8);
+            text-transform: uppercase; letter-spacing: 2px; animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
     </style>
 </head>
 <body>
+
+    <div id="start-overlay">
+        <div class="start-text">Click to Start Fullscreen Presentation</div>
+    </div>
 
     <div id="bg-canvas"></div>
 
@@ -256,6 +274,29 @@
         `;
 
         container.innerHTML = htmlContent;
+
+        // --- FULLSCREEN LOGIC ---
+        function requestFullScreen() {
+            let elem = document.documentElement;
+            if (!document.fullscreenElement) {
+                if (elem.requestFullscreen) { elem.requestFullscreen(); }
+                else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); } // Safari
+                else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); } // IE11
+            }
+        }
+
+        let presentationStarted = false;
+
+        function startPresentation() {
+            if (!presentationStarted) {
+                requestFullScreen();
+                document.getElementById('start-overlay').style.opacity = '0';
+                setTimeout(() => { document.getElementById('start-overlay').style.display = 'none'; }, 500);
+                presentationStarted = true;
+            } else {
+                goToNextSlide();
+            }
+        }
 
         // --- 3. CINEMATIC LOGIC ---
         let currentSlide = 0;
@@ -390,9 +431,13 @@
         }
 
         // --- CONTROLS ---
-        document.body.addEventListener('click', goToNextSlide);
+        document.body.addEventListener('click', startPresentation);
 
         document.addEventListener('keydown', (e) => {
+            if (!presentationStarted) {
+                startPresentation();
+                return;
+            }
             if (e.code === 'ArrowRight') goToNextSlide();
             if (e.code === 'ArrowLeft') goToPrevSlide();
             if (e.code === 'Enter' || e.code === 'Space') {
