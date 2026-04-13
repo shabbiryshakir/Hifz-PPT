@@ -2,7 +2,7 @@
 <html lang="en" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Hifzul Quran Presentation - PHS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -100,7 +100,6 @@
             white-space: normal; word-wrap: break-word; letter-spacing: 0.5px;
         }
 
-        /* Themes */
         .theme-bronze .plaque { background: linear-gradient(145deg, #4b3621, #2c1e16); border: 2px solid #a67c52; }
         .theme-bronze .plaque::before { border: 1px dashed rgba(166, 124, 82, 0.5); }
         .theme-bronze .plaque-text { color: #fef08a; text-shadow: 2px 2px 4px rgba(0,0,0,1); }
@@ -116,7 +115,6 @@
         .theme-gold .plaque::before { border: 2px solid rgba(251, 191, 36, 0.6); }
         .theme-gold .plaque-text { color: #fef08a; text-shadow: 0 3px 8px rgba(0,0,0,1); }
 
-        /* Spotlight System */
         #spotlight-container {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
             opacity: 0; z-index: 1000; pointer-events: none;
@@ -130,34 +128,43 @@
 
         .text-gold-gradient { background: -webkit-linear-gradient(#fef08a, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-        /* Big Marhala Number Roll */
         .huge-stat-box {
             position: absolute; top: 40px; left: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transform: translateY(-20px); transition: all 1s ease 0.5s;
         }
         .active .huge-stat-box { opacity: 1; transform: translateY(0); }
 
-        /* --- REMOTE CONTROL UI --- */
+        /* --- FIXED REMOTE CONTROL UI FOR MOBILE --- */
         #remote-ui {
             display: none; position: fixed; inset: 0; background: #111827; z-index: 9999;
-            flex-direction: column; justify-content: center; align-items: center; padding: 2rem; gap: 1rem;
-            font-family: sans-serif;
+            flex-direction: column; justify-content: center; align-items: center; 
+            padding: 5%; width: 100vw; height: 100dvh; box-sizing: border-box;
+            font-family: sans-serif; gap: 1rem;
         }
         .remote-btn {
-            width: 100%; padding: 1.5rem; font-size: 1.5rem; font-weight: bold; border-radius: 1rem;
+            width: 100%; border-radius: 1rem; border: none; font-weight: bold;
             color: white; text-align: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
-            transition: transform 0.1s;
+            display: flex; justify-content: center; align-items: center;
+            touch-action: manipulation; /* Prevents double-tap zooming */
         }
         .remote-btn:active { transform: scale(0.95); }
-        .btn-next { background: #059669; flex-grow: 2; font-size: 2.5rem; display: flex; justify-content: center; align-items: center;}
-        .btn-skip { background: #d97706; }
-        .btn-prev { background: #4b5563; }
-        #remote-status { color: #9ca3af; margin-bottom: 1rem; }
+        
+        .btn-next { background: #059669; flex: 3; font-size: 2.2rem; }
+        .btn-skip { background: #d97706; flex: 1; font-size: 1.2rem; }
+        .btn-prev { background: #4b5563; flex: 1; font-size: 1.2rem; }
+        
+        #remote-status { 
+            color: #9ca3af; margin-bottom: 5px; text-align: center; 
+            width: 100%; font-size: 1rem; line-height: 1.2;
+        }
+        .status-connected { color: #34d399 !important; font-weight: bold; font-size: 1.2rem !important; }
+        .status-error { color: #ef4444 !important; }
+
     </style>
 </head>
 <body>
 
     <div id="remote-ui" dir="ltr">
-        <h2 class="text-2xl text-white font-bold mb-2">PHS Remote Control</h2>
+        <h2 class="text-2xl text-white font-bold mb-1">PHS Remote</h2>
         <div id="remote-status">Connecting to screen...</div>
         
         <button class="remote-btn btn-next" onclick="sendRemoteCommand('next')">NEXT SLIDE</button>
@@ -198,7 +205,6 @@
         const container = document.getElementById('presentation-container');
         let htmlContent = '';
 
-        // Slide 0: Title
         htmlContent += `
             <div class="slide active" id="slide-0" data-trans="zoom">
                 <h2 class="text-3xl md:text-4xl text-[#a7f3d0] fade-up tracking-widest mb-2 font-sans uppercase drop-shadow-lg">Panjataniyah Higher Secondary School</h2>
@@ -209,7 +215,6 @@
             </div>
         `;
 
-        // Slide 1: Stats
         htmlContent += `
             <div class="slide" id="slide-1" data-trans="flip">
                 <h2 class="text-8xl font-bold mb-12 fade-up text-[#d4af37] alkanz-fix drop-shadow-2xl">نظرة عامة</h2>
@@ -230,14 +235,12 @@
             </div>
         `;
 
-        // Slides 2+: Dynamic Plaque Grids
         marhalas.forEach((marhala, index) => {
             const slideId = index + 2;
             const count = marhala.students.length;
             const isGold = marhala.theme === 'gold';
             const trans = isGold ? 'rise' : (index % 2 === 0 ? 'zoom' : 'flip');
 
-            // --- INTELLIGENT PLAQUE SIZING & SPACING (Fixed for bleeding) ---
             let plaqueWidth, fontSize, minHeight, containerGap, titleMargin;
             if (count > 20) {
                 plaqueWidth = '150px'; fontSize = '0.9rem'; minHeight = '50px'; containerGap = '0.75rem'; titleMargin = 'mb-2'; 
@@ -279,7 +282,6 @@
             `;
         });
 
-        // End Slide
         htmlContent += `
             <div class="slide" id="slide-${marhalas.length + 2}" data-trans="rise">
                 <h1 class="text-[10rem] font-bold fade-up text-gold-gradient drop-shadow-[0_20px_30px_rgba(0,0,0,0.9)] alkanz-fix leading-tight text-center">
@@ -294,7 +296,6 @@
         let currentSlide = 0;
         const slides = document.querySelectorAll('.slide');
         let currentAnimationId = 0;
-
         const sleep = ms => new Promise(r => setTimeout(r, ms));
 
         async function runCinematicReveal(slideId, animId) {
@@ -311,12 +312,9 @@
                 if (currentAnimationId !== animId) return;
 
                 const card = cards[i];
-                const studentName = card.getAttribute('data-name');
-                const theme = card.getAttribute('data-theme');
-                
-                spotName.innerText = studentName;
+                spotName.innerText = card.getAttribute('data-name');
                 spotPlaque.className = 'plaque'; 
-                spotlight.className = `theme-${theme}`;
+                spotlight.className = `theme-${card.getAttribute('data-theme')}`;
 
                 spotlight.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
                 spotlight.style.opacity = 1;
@@ -331,7 +329,6 @@
                 const targetY = rect.top + rect.height / 2;
                 const deltaX = targetX - (window.innerWidth / 2);
                 const deltaY = targetY - (window.innerHeight / 2);
-                
                 const scale = targetPlaque.offsetWidth / spotPlaque.offsetWidth;
 
                 spotlight.style.transition = 'all 0.4s cubic-bezier(0.55, 0.085, 0.68, 0.53)';
@@ -350,20 +347,16 @@
 
         function triggerSkipAnimation() {
             currentAnimationId++; 
-            const spotlight = document.getElementById('spotlight-container');
-            spotlight.style.opacity = 0;
-            spotlight.style.transform = 'translate(-50%, -50%) scale(0)';
-            
-            const activeCards = slides[currentSlide].querySelectorAll('.plaque-wrapper');
-            activeCards.forEach(c => {
+            document.getElementById('spotlight-container').style.opacity = 0;
+            document.getElementById('spotlight-container').style.transform = 'translate(-50%, -50%) scale(0)';
+            slides[currentSlide].querySelectorAll('.plaque-wrapper').forEach(c => {
                 c.style.transition = 'opacity 0.3s';
                 c.style.opacity = 1;
             });
         }
 
         function animateNumbersForSlide(slideElement) {
-            const counters = slideElement.querySelectorAll('.stat-number');
-            counters.forEach(counter => {
+            slideElement.querySelectorAll('.stat-number').forEach(counter => {
                 const target = +counter.getAttribute('data-target');
                 counter.innerText = '0'; 
                 let startTimestamp = null;
@@ -381,18 +374,13 @@
         function triggerNextSlide() {
             if (currentSlide < slides.length - 1) {
                 triggerSkipAnimation();
-                const oldCounters = slides[currentSlide].querySelectorAll('.stat-number');
-                oldCounters.forEach(c => c.innerText = '0');
-
+                slides[currentSlide].querySelectorAll('.stat-number').forEach(c => c.innerText = '0');
                 slides[currentSlide].classList.remove('active');
                 currentSlide++;
                 slides[currentSlide].classList.add('active');
 
-                if (slides[currentSlide].getAttribute('data-istheme') === 'gold') {
-                    document.body.classList.add('theme-gold-active');
-                } else {
-                    document.body.classList.remove('theme-gold-active');
-                }
+                if (slides[currentSlide].getAttribute('data-istheme') === 'gold') document.body.classList.add('theme-gold-active');
+                else document.body.classList.remove('theme-gold-active');
 
                 setTimeout(() => animateNumbersForSlide(slides[currentSlide]), 600);
                 if (currentSlide >= 2 && currentSlide < slides.length - 1) {
@@ -405,23 +393,17 @@
         function triggerPrevSlide() {
             triggerSkipAnimation();
             if (currentSlide > 0) {
-                const oldCounters = slides[currentSlide].querySelectorAll('.stat-number');
-                oldCounters.forEach(c => c.innerText = '0');
-
+                slides[currentSlide].querySelectorAll('.stat-number').forEach(c => c.innerText = '0');
                 slides[currentSlide].classList.remove('active');
                 currentSlide--;
                 slides[currentSlide].classList.add('active');
                 
-                if (slides[currentSlide].getAttribute('data-istheme') !== 'gold') {
-                    document.body.classList.remove('theme-gold-active');
-                }
+                if (slides[currentSlide].getAttribute('data-istheme') !== 'gold') document.body.classList.remove('theme-gold-active');
                 setTimeout(() => animateNumbersForSlide(slides[currentSlide]), 600);
             }
         }
 
-        // Standard Keyboard and Click events (for PC)
         document.body.addEventListener('click', (e) => {
-            // Prevent if clicking on remote UI
             if(e.target.classList.contains('remote-btn') || isRemote) return; 
             triggerNextSlide();
         });
@@ -429,23 +411,16 @@
         document.addEventListener('keydown', (e) => {
             if (e.code === 'ArrowRight') triggerNextSlide();
             if (e.code === 'ArrowLeft') triggerPrevSlide();
-            if (e.code === 'Enter' || e.code === 'Space') {
-                e.preventDefault(); triggerSkipAnimation();
-            }
+            if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); triggerSkipAnimation(); }
         });
 
-
-        // --- 4. CLOUD REMOTE CONTROL SYSTEM ---
-        
-        // UNIQUE CHANNEL ID - This prevents someone else's presentation from controlling yours.
+        // --- 4. CLOUD REMOTE CONTROL SYSTEM (Upgraded to EMQX) ---
         const MQTT_TOPIC = "phs-quran-event-2026-remote"; 
-        
         const urlParams = new URLSearchParams(window.location.search);
         const isRemote = urlParams.get('remote') === 'true';
         let mqttClient = null;
 
         if (isRemote) {
-            // Turn on remote UI, hide presentation
             document.getElementById('remote-ui').style.display = 'flex';
             document.getElementById('bg-canvas').style.display = 'none';
             document.getElementById('logo-container').style.display = 'none';
@@ -453,18 +428,22 @@
         }
 
         function connectToMQTT() {
-            // Using HiveMQ's free public websocket broker
-            const clientId = "phs-" + Math.random().toString(16).substr(2, 8);
-            mqttClient = new Paho.MQTT.Client("broker.hivemq.com", 8443, "/mqtt", clientId);
+            const statusEl = document.getElementById('remote-status');
+            
+            // Using EMQX public broker on WSS port 8084 (Extremely reliable)
+            const clientId = "phs-" + Math.random().toString(16).substr(2, 10);
+            mqttClient = new Paho.MQTT.Client("broker.emqx.io", 8084, "/mqtt", clientId);
 
             mqttClient.onConnectionLost = function (responseObject) {
-                if (isRemote) document.getElementById('remote-status').innerText = "Disconnected. Retrying...";
-                setTimeout(connectToMQTT, 2000); // Reconnect
+                if (isRemote) {
+                    statusEl.className = "status-error";
+                    statusEl.innerText = "Disconnected! Retrying...";
+                }
+                setTimeout(connectToMQTT, 3000); 
             };
 
             mqttClient.onMessageArrived = function (message) {
-                if(isRemote) return; // Remote doesn't listen to commands, it sends them
-
+                if(isRemote) return; 
                 const cmd = message.payloadString;
                 if (cmd === "next") triggerNextSlide();
                 else if (cmd === "skip") triggerSkipAnimation();
@@ -473,15 +452,19 @@
 
             mqttClient.connect({
                 useSSL: true,
+                timeout: 10,
                 onSuccess: function () {
                     if (isRemote) {
-                        document.getElementById('remote-status').innerText = "Connected! Ready to control.";
-                        document.getElementById('remote-status').style.color = "#34d399";
+                        statusEl.className = "status-connected";
+                        statusEl.innerText = "CONNECTED! Ready to control.";
                     }
                     mqttClient.subscribe(MQTT_TOPIC);
                 },
-                onFailure: function() {
-                    if (isRemote) document.getElementById('remote-status').innerText = "Failed to connect to signal server.";
+                onFailure: function(err) {
+                    if (isRemote) {
+                        statusEl.className = "status-error";
+                        statusEl.innerText = "Connection blocked by network firewall. Use cellular data.";
+                    }
                 }
             });
         }
@@ -494,9 +477,7 @@
             }
         }
 
-        // Boot up the remote server connection
         connectToMQTT();
-
     </script>
 </body>
 </html>
