@@ -9,7 +9,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.min.js"></script>
 
     <style>
-        /* Load Alkanz Font */
         @font-face {
             font-family: 'Alkanz';
             src: url('alkanz.ttf') format('truetype'), url('alkanz.woff') format('woff');
@@ -22,7 +21,6 @@
             user-select: none; cursor: pointer; perspective: 2000px; 
         }
 
-        /* Ambient Hall Lighting */
         #bg-canvas {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
             background: radial-gradient(circle at 50% 30%, #064e3b 0%, #022c22 50%, #000000 100%);
@@ -39,9 +37,7 @@
             background: radial-gradient(circle at 50% 30%, #422006 0%, #271404 50%, #000000 100%);
         }
 
-        .alkanz-fix {
-            line-height: 1.8 !important; padding-bottom: 0.5em; padding-top: 0.2em; overflow: visible;
-        }
+        .alkanz-fix { line-height: 1.8 !important; padding-bottom: 0.5em; padding-top: 0.2em; overflow: visible; }
 
         #logo-container {
             position: fixed; top: 30px; right: 40px; z-index: 100;
@@ -54,7 +50,6 @@
             transform-style: preserve-3d; z-index: 10;
         }
 
-        /* --- SLIDE TRANSITIONS --- */
         .slide {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -74,7 +69,6 @@
         .delay-100 { transition-delay: 150ms; }
         .delay-200 { transition-delay: 300ms; }
 
-        /* --- THE VIRTUAL PLAQUES --- */
         .students-container {
             display: flex; flex-wrap: wrap; justify-content: center; align-content: center;
             width: 95vw; max-height: 75vh; 
@@ -133,7 +127,7 @@
         }
         .active .huge-stat-box { opacity: 1; transform: translateY(0); }
 
-        /* --- FIXED REMOTE CONTROL UI FOR MOBILE --- */
+        /* --- REMOTE CONTROL UI --- */
         #remote-ui {
             display: none; position: fixed; inset: 0; background: #111827; z-index: 9999;
             flex-direction: column; justify-content: center; align-items: center; 
@@ -144,7 +138,7 @@
             width: 100%; border-radius: 1rem; border: none; font-weight: bold;
             color: white; text-align: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
             display: flex; justify-content: center; align-items: center;
-            touch-action: manipulation; /* Prevents double-tap zooming */
+            touch-action: manipulation;
         }
         .remote-btn:active { transform: scale(0.95); }
         
@@ -165,11 +159,11 @@
 
     <div id="remote-ui" dir="ltr">
         <h2 class="text-2xl text-white font-bold mb-1">PHS Remote</h2>
-        <div id="remote-status">Connecting to screen...</div>
+        <div id="remote-status">Connecting securely...</div>
         
-        <button class="remote-btn btn-next" onclick="sendRemoteCommand('next')">NEXT SLIDE</button>
-        <button class="remote-btn btn-skip" onclick="sendRemoteCommand('skip')">SKIP ANIMATION</button>
-        <button class="remote-btn btn-prev" onclick="sendRemoteCommand('prev')">PREVIOUS SLIDE</button>
+        <button class="remote-btn btn-next" onclick="sendSyncCommand('next')">NEXT SLIDE</button>
+        <button class="remote-btn btn-skip" onclick="sendSyncCommand('skip')">SKIP ANIMATION</button>
+        <button class="remote-btn btn-prev" onclick="sendSyncCommand('prev')">PREVIOUS SLIDE</button>
     </div>
 
     <div id="bg-canvas"></div>
@@ -255,7 +249,7 @@
             let studentsHtml = '';
             marhala.students.forEach((student) => {
                 studentsHtml += `
-                    <div class="plaque-wrapper theme-${marhala.theme}" data-name="${student}" data-theme="${marhala.theme}" style="width: ${plaqueWidth}; min-height: ${minHeight};">
+                    <div class="plaque-wrapper theme-${marhala.theme}" data-name="${student}" data-theme="${marhala.theme}" style="width: ${plaqueWidth}; minHeight: ${minHeight};">
                         <div class="plaque">
                             <h3 class="plaque-text" style="font-size: ${fontSize};">${student}</h3>
                         </div>
@@ -292,7 +286,7 @@
 
         container.innerHTML = htmlContent;
 
-        // --- 3. PRESENTATION LOGIC ---
+        // --- 3. CORE PRESENTATION LOGIC ---
         let currentSlide = 0;
         const slides = document.querySelectorAll('.slide');
         let currentAnimationId = 0;
@@ -371,51 +365,40 @@
             });
         }
 
-        function triggerNextSlide() {
-            if (currentSlide < slides.length - 1) {
-                triggerSkipAnimation();
-                slides[currentSlide].querySelectorAll('.stat-number').forEach(c => c.innerText = '0');
-                slides[currentSlide].classList.remove('active');
-                currentSlide++;
-                slides[currentSlide].classList.add('active');
+        // --- THE "JUMP" FUNCTION FOR SYNCHRONIZING LATE JOINERS ---
+        function jumpToExactSlide(targetIndex) {
+            if (targetIndex === currentSlide) return;
+            
+            triggerSkipAnimation();
+            slides[currentSlide].querySelectorAll('.stat-number').forEach(c => c.innerText = '0');
+            slides[currentSlide].classList.remove('active');
+            
+            currentSlide = targetIndex;
+            slides[currentSlide].classList.add('active');
 
-                if (slides[currentSlide].getAttribute('data-istheme') === 'gold') document.body.classList.add('theme-gold-active');
-                else document.body.classList.remove('theme-gold-active');
+            if (slides[currentSlide].getAttribute('data-istheme') === 'gold') document.body.classList.add('theme-gold-active');
+            else document.body.classList.remove('theme-gold-active');
 
-                setTimeout(() => animateNumbersForSlide(slides[currentSlide]), 600);
-                if (currentSlide >= 2 && currentSlide < slides.length - 1) {
-                    currentAnimationId++;
-                    runCinematicReveal(currentSlide, currentAnimationId);
-                }
+            setTimeout(() => animateNumbersForSlide(slides[currentSlide]), 600);
+            
+            // Only trigger cinematic reveal if jumping into a new marhala normally (not skipping backwards)
+            if (currentSlide >= 2 && currentSlide < slides.length - 1) {
+                currentAnimationId++;
+                runCinematicReveal(currentSlide, currentAnimationId);
             }
+        }
+
+        function triggerNextSlide() {
+            if (currentSlide < slides.length - 1) jumpToExactSlide(currentSlide + 1);
         }
 
         function triggerPrevSlide() {
-            triggerSkipAnimation();
-            if (currentSlide > 0) {
-                slides[currentSlide].querySelectorAll('.stat-number').forEach(c => c.innerText = '0');
-                slides[currentSlide].classList.remove('active');
-                currentSlide--;
-                slides[currentSlide].classList.add('active');
-                
-                if (slides[currentSlide].getAttribute('data-istheme') !== 'gold') document.body.classList.remove('theme-gold-active');
-                setTimeout(() => animateNumbersForSlide(slides[currentSlide]), 600);
-            }
+            if (currentSlide > 0) jumpToExactSlide(currentSlide - 1);
         }
 
-        document.body.addEventListener('click', (e) => {
-            if(e.target.classList.contains('remote-btn') || isRemote) return; 
-            triggerNextSlide();
-        });
 
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'ArrowRight') triggerNextSlide();
-            if (e.code === 'ArrowLeft') triggerPrevSlide();
-            if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); triggerSkipAnimation(); }
-        });
-
-        // --- 4. CLOUD REMOTE CONTROL SYSTEM (Upgraded to EMQX) ---
-        const MQTT_TOPIC = "phs-quran-event-2026-remote"; 
+        // --- 4. CLOUD SYNCHRONIZATION SYSTEM (PORT 443 + RETAINED STATE) ---
+        const MQTT_TOPIC = "phs-quran-event-2026-sync-state"; 
         const urlParams = new URLSearchParams(window.location.search);
         const isRemote = urlParams.get('remote') === 'true';
         let mqttClient = null;
@@ -430,54 +413,76 @@
         function connectToMQTT() {
             const statusEl = document.getElementById('remote-status');
             
-            // Using EMQX public broker on WSS port 8084 (Extremely reliable)
+            // Connected to Eclipse on PORT 443 (Standard HTTPS port, impossible to block)
             const clientId = "phs-" + Math.random().toString(16).substr(2, 10);
-            mqttClient = new Paho.MQTT.Client("broker.emqx.io", 8084, "/mqtt", clientId);
+            mqttClient = new Paho.MQTT.Client("mqtt.eclipseprojects.io", 443, "/mqtt", clientId);
 
             mqttClient.onConnectionLost = function (responseObject) {
-                if (isRemote) {
-                    statusEl.className = "status-error";
-                    statusEl.innerText = "Disconnected! Retrying...";
-                }
-                setTimeout(connectToMQTT, 3000); 
+                statusEl.className = "status-error";
+                statusEl.innerText = "Connection lost! Reconnecting securely...";
+                setTimeout(connectToMQTT, 2000); 
             };
 
             mqttClient.onMessageArrived = function (message) {
-                if(isRemote) return; 
-                const cmd = message.payloadString;
-                if (cmd === "next") triggerNextSlide();
-                else if (cmd === "skip") triggerSkipAnimation();
-                else if (cmd === "prev") triggerPrevSlide();
+                const payload = JSON.parse(message.payloadString);
+                
+                // If it's a skip command, skip immediately
+                if (payload.action === "skip") {
+                    if (!isRemote) triggerSkipAnimation();
+                    return;
+                }
+
+                // If it's a slide sync command, sync to that slide
+                if (payload.slide !== undefined) {
+                    if (isRemote) {
+                        currentSlide = payload.slide; // Keep remote tracker updated
+                    } else {
+                        jumpToExactSlide(payload.slide);
+                    }
+                }
             };
 
             mqttClient.connect({
                 useSSL: true,
-                timeout: 10,
+                timeout: 5,
                 onSuccess: function () {
-                    if (isRemote) {
-                        statusEl.className = "status-connected";
-                        statusEl.innerText = "CONNECTED! Ready to control.";
-                    }
+                    statusEl.className = "status-connected";
+                    statusEl.innerText = isRemote ? "SYNCED! Ready to control." : "Connected to Master Sync.";
                     mqttClient.subscribe(MQTT_TOPIC);
                 },
                 onFailure: function(err) {
-                    if (isRemote) {
-                        statusEl.className = "status-error";
-                        statusEl.innerText = "Connection blocked by network firewall. Use cellular data.";
-                    }
+                    statusEl.className = "status-error";
+                    statusEl.innerText = "Retrying connection...";
+                    setTimeout(connectToMQTT, 2000);
                 }
             });
         }
 
-        function sendRemoteCommand(cmd) {
+        // Only the Remote broadcasts the state. Viewers just listen.
+        function sendSyncCommand(action) {
             if (mqttClient && mqttClient.isConnected()) {
-                const message = new Paho.MQTT.Message(cmd);
+                let payloadObj = {};
+                
+                if (action === 'skip') {
+                    payloadObj = { action: "skip", timestamp: Date.now() };
+                } else {
+                    if (action === 'next' && currentSlide < slides.length - 1) currentSlide++;
+                    if (action === 'prev' && currentSlide > 0) currentSlide--;
+                    
+                    payloadObj = { action: "goto", slide: currentSlide, timestamp: Date.now() };
+                }
+
+                const message = new Paho.MQTT.Message(JSON.stringify(payloadObj));
                 message.destinationName = MQTT_TOPIC;
+                // MAGIC FIX: 'retained=true' saves the state in the cloud. Late joiners get this instantly!
+                if (action !== 'skip') message.retained = true; 
+                
                 mqttClient.send(message);
             }
         }
 
         connectToMQTT();
+
     </script>
 </body>
 </html>
