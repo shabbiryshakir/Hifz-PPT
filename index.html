@@ -170,8 +170,6 @@
 
     <script>
         // --- 1. PRECISE DATA CONFIGURATION ---
-        const overallStats = { students: 36, attendance: 242, htb: 13 };
-
         const marhalas = [
             { theme: "bronze", nameAr: "جزء عم", nameEn: "Juz Amma", students: ["Moiz Semalda", "Mariya Shikari", "Mubina anif", "Burhanuddin munshi", "Fatema asif", "Husaina thencha", "Huazifa badshah", "Nafisa saifee", "Moahmmed naseem", "Batul saify", "Aliasgar sundrel", "Mohammed Ajanda", "Zahara rizvi", "Husain rizvi", "Sakina shad", "Zainab naseem", "Nafisa naseem", "Sakina Shakir", "Batul Naseem", "Zahra rajpur", "Insiya Boraji", "Insiya Saifee", "Amatullah Rasgaw", "Rashida lucky", "Burhanuddin Amin", "Zahara zabir"] }, 
             { theme: "bronze", nameAr: "مرحلة ثانية", nameEn: "Marhala Sanea", students: ["Munira Sabir", "Aziz semalda", "Zahra dabir", "Tasneem saifee", "Rashida saifee", "Idris noorkhanji", "Ruquiya taheri", "Mariya arif", "Insiyah dawoodi", "Insiya bharmal", "Zainab dabeer", "Mufaddal mandleshwar", "Zainab dhinoj", "Abdulqadir rizvi"] }, 
@@ -183,10 +181,14 @@
             { theme: "gold", nameAr: "حفاظ", nameEn: "Huffaz", students: ["Zainab bn Ojhar", "Insiya bn Malak", "Mohammad Mandleshwar", "Sarrah Kagzi"] } 
         ];
 
+        // Dynamically calculate total
+        const totalIkhtebaar = marhalas.reduce((sum, m) => sum + m.students.length, 0);
+
         // --- 2. HTML GENERATOR ---
         const container = document.getElementById('presentation-container');
         let htmlContent = '';
 
+        // Slide 0: Title
         htmlContent += `
             <div class="slide active" id="slide-0" data-trans="zoom">
                 <h2 class="text-3xl md:text-4xl text-[#a7f3d0] fade-up tracking-widest mb-2 font-sans uppercase drop-shadow-lg">Panjataniyah Higher Secondary School</h2>
@@ -197,26 +199,28 @@
             </div>
         `;
 
+        // Updated Slide 1: Detailed Marhala Counts Grid
+        let overviewGrid = '';
+        marhalas.forEach(m => {
+            overviewGrid += `
+                <div class="bg-black/40 backdrop-blur-md p-6 rounded-3xl border border-[#d4af37]/40 shadow-[0_10px_30px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center transform transition duration-500 hover:scale-105">
+                    <div class="text-6xl font-bold text-white mb-2 stat-number leading-none drop-shadow-lg" data-target="${m.students.length}">0</div>
+                    <div class="text-lg text-[#fde047] font-sans uppercase tracking-widest font-bold mt-2">${m.nameEn}</div>
+                    <div class="text-2xl text-[#a7f3d0] alkanz-fix mt-1 drop-shadow-md">${m.nameAr}</div>
+                </div>
+            `;
+        });
+
         htmlContent += `
             <div class="slide" id="slide-1" data-trans="flip">
-                <h2 class="text-8xl font-bold mb-12 fade-up text-[#d4af37] alkanz-fix drop-shadow-2xl">نظرة عامة</h2>
-                <div class="flex gap-16 text-center fade-up delay-200" dir="ltr">
-                    <div class="bg-black/40 backdrop-blur-md p-10 rounded-3xl border border-[#d4af37]/40 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
-                        <div class="text-8xl font-bold text-white mb-4 stat-number" data-target="${overallStats.students}">0</div>
-                        <div class="text-xl text-[#fde047] font-sans uppercase tracking-widest font-bold">Total Students</div>
-                    </div>
-                    <div class="bg-black/40 backdrop-blur-md p-10 rounded-3xl border border-[#d4af37]/40 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
-                        <div class="text-8xl font-bold text-white mb-4 stat-number" data-target="${overallStats.attendance}">0</div>
-                        <div class="text-xl text-[#fde047] font-sans uppercase tracking-widest font-bold">Total Attendance</div>
-                    </div>
-                    <div class="bg-black/40 backdrop-blur-md p-10 rounded-3xl border border-[#d4af37]/40 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
-                        <div class="text-8xl font-bold text-white mb-4 stat-number" data-target="${overallStats.htb}">0</div>
-                        <div class="text-xl text-[#fde047] font-sans uppercase tracking-widest font-bold">Total HTB</div>
-                    </div>
+                <h2 class="text-[5rem] font-bold mb-10 fade-up text-[#d4af37] alkanz-fix drop-shadow-2xl">نظرة عامة</h2>
+                <div class="grid grid-cols-4 gap-6 text-center fade-up delay-200 w-[90vw] max-w-6xl" dir="ltr">
+                    ${overviewGrid}
                 </div>
             </div>
         `;
 
+        // Slides 2+: Dynamic Plaque Grids
         marhalas.forEach((marhala, index) => {
             const slideId = index + 2;
             const count = marhala.students.length;
@@ -264,9 +268,18 @@
             `;
         });
 
+        // PENULTIMATE SLIDE: Fullscreen Total Ikhtebaar Highlight
+        htmlContent += `
+            <div class="slide" id="slide-${marhalas.length + 2}" data-trans="zoom">
+                <h2 class="text-4xl md:text-5xl text-[#a7f3d0] fade-up tracking-widest mb-6 font-sans uppercase drop-shadow-lg text-center">Total Ikhtebaar Completed</h2>
+                <div class="text-[18rem] font-bold text-gold-gradient drop-shadow-[0_20px_40px_rgba(212,175,55,0.6)] leading-none fade-up delay-100 stat-number" data-target="${totalIkhtebaar}">0</div>
+                <h2 class="text-7xl font-bold mt-10 fade-up delay-200 text-[#d4af37] alkanz-fix drop-shadow-2xl">إجمالي الاختبارات</h2>
+            </div>
+        `;
+
         // End Slide
         htmlContent += `
-            <div class="slide" id="slide-${marhalas.length + 2}" data-trans="rise">
+            <div class="slide" id="slide-${marhalas.length + 3}" data-trans="rise">
                 <h1 class="text-[10rem] font-bold fade-up text-gold-gradient drop-shadow-[0_20px_30px_rgba(0,0,0,0.9)] alkanz-fix leading-tight text-center">
                     الحمد لله <br> شكراً لله
                 </h1>
@@ -280,8 +293,8 @@
             let elem = document.documentElement;
             if (!document.fullscreenElement) {
                 if (elem.requestFullscreen) { elem.requestFullscreen(); }
-                else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); } // Safari
-                else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); } // IE11
+                else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); } 
+                else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); } 
             }
         }
 
@@ -397,7 +410,8 @@
                 currentSlide++;
                 slides[currentSlide].classList.add('active');
 
-                if (slides[currentSlide].getAttribute('data-istheme') === 'gold') {
+                // Add gold theme if Huffaz OR Total Ikhtebaar Slide
+                if (slides[currentSlide].getAttribute('data-istheme') === 'gold' || currentSlide === slides.length - 2) {
                     document.body.classList.add('theme-gold-active');
                 } else {
                     document.body.classList.remove('theme-gold-active');
@@ -405,7 +419,7 @@
 
                 setTimeout(() => animateNumbersForSlide(slides[currentSlide]), 600);
 
-                if (currentSlide >= 2 && currentSlide < slides.length - 1) {
+                if (currentSlide >= 2 && currentSlide <= marhalas.length + 1) {
                     currentAnimationId++;
                     runCinematicReveal(currentSlide, currentAnimationId);
                 }
@@ -422,7 +436,9 @@
                 currentSlide--;
                 slides[currentSlide].classList.add('active');
                 
-                if (slides[currentSlide].getAttribute('data-istheme') !== 'gold') {
+                if (slides[currentSlide].getAttribute('data-istheme') === 'gold' || currentSlide === slides.length - 2) {
+                    document.body.classList.add('theme-gold-active');
+                } else {
                     document.body.classList.remove('theme-gold-active');
                 }
 
