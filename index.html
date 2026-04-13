@@ -2,13 +2,11 @@
 <html lang="en" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hifzul Quran Presentation - PHS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.min.js"></script>
-
     <style>
+        /* Load Alkanz Font */
         @font-face {
             font-family: 'Alkanz';
             src: url('alkanz.ttf') format('truetype'), url('alkanz.woff') format('woff');
@@ -21,6 +19,7 @@
             user-select: none; cursor: pointer; perspective: 2000px; 
         }
 
+        /* Ambient Hall Lighting */
         #bg-canvas {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
             background: radial-gradient(circle at 50% 30%, #064e3b 0%, #022c22 50%, #000000 100%);
@@ -37,7 +36,9 @@
             background: radial-gradient(circle at 50% 30%, #422006 0%, #271404 50%, #000000 100%);
         }
 
-        .alkanz-fix { line-height: 1.8 !important; padding-bottom: 0.5em; padding-top: 0.2em; overflow: visible; }
+        .alkanz-fix {
+            line-height: 1.8 !important; padding-bottom: 0.5em; padding-top: 0.2em; overflow: visible;
+        }
 
         #logo-container {
             position: fixed; top: 30px; right: 40px; z-index: 100;
@@ -50,6 +51,7 @@
             transform-style: preserve-3d; z-index: 10;
         }
 
+        /* --- SLIDE TRANSITIONS --- */
         .slide {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -69,6 +71,7 @@
         .delay-100 { transition-delay: 150ms; }
         .delay-200 { transition-delay: 300ms; }
 
+        /* --- THE VIRTUAL PLAQUES --- */
         .students-container {
             display: flex; flex-wrap: wrap; justify-content: center; align-content: center;
             width: 95vw; max-height: 75vh; 
@@ -94,6 +97,7 @@
             white-space: normal; word-wrap: break-word; letter-spacing: 0.5px;
         }
 
+        /* Themes */
         .theme-bronze .plaque { background: linear-gradient(145deg, #4b3621, #2c1e16); border: 2px solid #a67c52; }
         .theme-bronze .plaque::before { border: 1px dashed rgba(166, 124, 82, 0.5); }
         .theme-bronze .plaque-text { color: #fef08a; text-shadow: 2px 2px 4px rgba(0,0,0,1); }
@@ -109,6 +113,7 @@
         .theme-gold .plaque::before { border: 2px solid rgba(251, 191, 36, 0.6); }
         .theme-gold .plaque-text { color: #fef08a; text-shadow: 0 3px 8px rgba(0,0,0,1); }
 
+        /* Spotlight System */
         #spotlight-container {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
             opacity: 0; z-index: 1000; pointer-events: none;
@@ -122,49 +127,14 @@
 
         .text-gold-gradient { background: -webkit-linear-gradient(#fef08a, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
+        /* Big Marhala Number Roll */
         .huge-stat-box {
             position: absolute; top: 40px; left: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transform: translateY(-20px); transition: all 1s ease 0.5s;
         }
         .active .huge-stat-box { opacity: 1; transform: translateY(0); }
-
-        /* --- REMOTE CONTROL UI --- */
-        #remote-ui {
-            display: none; position: fixed; inset: 0; background: #111827; z-index: 9999;
-            flex-direction: column; justify-content: center; align-items: center; 
-            padding: 5%; width: 100vw; height: 100dvh; box-sizing: border-box;
-            font-family: sans-serif; gap: 1rem;
-        }
-        .remote-btn {
-            width: 100%; border-radius: 1rem; border: none; font-weight: bold;
-            color: white; text-align: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
-            display: flex; justify-content: center; align-items: center;
-            touch-action: manipulation;
-        }
-        .remote-btn:active { transform: scale(0.95); }
-        
-        .btn-next { background: #059669; flex: 3; font-size: 2.2rem; }
-        .btn-skip { background: #d97706; flex: 1; font-size: 1.2rem; }
-        .btn-prev { background: #4b5563; flex: 1; font-size: 1.2rem; }
-        
-        #remote-status { 
-            color: #9ca3af; margin-bottom: 5px; text-align: center; 
-            width: 100%; font-size: 1rem; line-height: 1.2;
-        }
-        .status-connected { color: #34d399 !important; font-weight: bold; font-size: 1.2rem !important; }
-        .status-error { color: #ef4444 !important; }
-
     </style>
 </head>
 <body>
-
-    <div id="remote-ui" dir="ltr">
-        <h2 class="text-2xl text-white font-bold mb-1">PHS Remote</h2>
-        <div id="remote-status">Connecting securely...</div>
-        
-        <button class="remote-btn btn-next" onclick="sendSyncCommand('next')">NEXT SLIDE</button>
-        <button class="remote-btn btn-skip" onclick="sendSyncCommand('skip')">SKIP ANIMATION</button>
-        <button class="remote-btn btn-prev" onclick="sendSyncCommand('prev')">PREVIOUS SLIDE</button>
-    </div>
 
     <div id="bg-canvas"></div>
 
@@ -181,7 +151,7 @@
     <div id="presentation-container"></div>
 
     <script>
-        // --- 1. DATA CONFIGURATION ---
+        // --- 1. PRECISE DATA CONFIGURATION ---
         const overallStats = { students: 36, attendance: 242, htb: 13 };
 
         const marhalas = [
@@ -249,7 +219,7 @@
             let studentsHtml = '';
             marhala.students.forEach((student) => {
                 studentsHtml += `
-                    <div class="plaque-wrapper theme-${marhala.theme}" data-name="${student}" data-theme="${marhala.theme}" style="width: ${plaqueWidth}; minHeight: ${minHeight};">
+                    <div class="plaque-wrapper theme-${marhala.theme}" data-name="${student}" data-theme="${marhala.theme}" style="width: ${plaqueWidth}; min-height: ${minHeight};">
                         <div class="plaque">
                             <h3 class="plaque-text" style="font-size: ${fontSize};">${student}</h3>
                         </div>
@@ -276,6 +246,7 @@
             `;
         });
 
+        // End Slide
         htmlContent += `
             <div class="slide" id="slide-${marhalas.length + 2}" data-trans="rise">
                 <h1 class="text-[10rem] font-bold fade-up text-gold-gradient drop-shadow-[0_20px_30px_rgba(0,0,0,0.9)] alkanz-fix leading-tight text-center">
@@ -286,10 +257,11 @@
 
         container.innerHTML = htmlContent;
 
-        // --- 3. CORE PRESENTATION LOGIC ---
+        // --- 3. CINEMATIC LOGIC ---
         let currentSlide = 0;
         const slides = document.querySelectorAll('.slide');
         let currentAnimationId = 0;
+
         const sleep = ms => new Promise(r => setTimeout(r, ms));
 
         async function runCinematicReveal(slideId, animId) {
@@ -306,9 +278,12 @@
                 if (currentAnimationId !== animId) return;
 
                 const card = cards[i];
-                spotName.innerText = card.getAttribute('data-name');
+                const studentName = card.getAttribute('data-name');
+                const theme = card.getAttribute('data-theme');
+                
+                spotName.innerText = studentName;
                 spotPlaque.className = 'plaque'; 
-                spotlight.className = `theme-${card.getAttribute('data-theme')}`;
+                spotlight.className = `theme-${theme}`;
 
                 spotlight.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
                 spotlight.style.opacity = 1;
@@ -323,6 +298,7 @@
                 const targetY = rect.top + rect.height / 2;
                 const deltaX = targetX - (window.innerWidth / 2);
                 const deltaY = targetY - (window.innerHeight / 2);
+                
                 const scale = targetPlaque.offsetWidth / spotPlaque.offsetWidth;
 
                 spotlight.style.transition = 'all 0.4s cubic-bezier(0.55, 0.085, 0.68, 0.53)';
@@ -339,18 +315,22 @@
             }
         }
 
-        function triggerSkipAnimation() {
+        function skipAnimation() {
             currentAnimationId++; 
-            document.getElementById('spotlight-container').style.opacity = 0;
-            document.getElementById('spotlight-container').style.transform = 'translate(-50%, -50%) scale(0)';
-            slides[currentSlide].querySelectorAll('.plaque-wrapper').forEach(c => {
+            const spotlight = document.getElementById('spotlight-container');
+            spotlight.style.opacity = 0;
+            spotlight.style.transform = 'translate(-50%, -50%) scale(0)';
+            
+            const activeCards = slides[currentSlide].querySelectorAll('.plaque-wrapper');
+            activeCards.forEach(c => {
                 c.style.transition = 'opacity 0.3s';
                 c.style.opacity = 1;
             });
         }
 
         function animateNumbersForSlide(slideElement) {
-            slideElement.querySelectorAll('.stat-number').forEach(counter => {
+            const counters = slideElement.querySelectorAll('.stat-number');
+            counters.forEach(counter => {
                 const target = +counter.getAttribute('data-target');
                 counter.innerText = '0'; 
                 let startTimestamp = null;
@@ -365,124 +345,61 @@
             });
         }
 
-        // --- THE "JUMP" FUNCTION FOR SYNCHRONIZING LATE JOINERS ---
-        function jumpToExactSlide(targetIndex) {
-            if (targetIndex === currentSlide) return;
-            
-            triggerSkipAnimation();
-            slides[currentSlide].querySelectorAll('.stat-number').forEach(c => c.innerText = '0');
-            slides[currentSlide].classList.remove('active');
-            
-            currentSlide = targetIndex;
-            slides[currentSlide].classList.add('active');
-
-            if (slides[currentSlide].getAttribute('data-istheme') === 'gold') document.body.classList.add('theme-gold-active');
-            else document.body.classList.remove('theme-gold-active');
-
-            setTimeout(() => animateNumbersForSlide(slides[currentSlide]), 600);
-            
-            // Only trigger cinematic reveal if jumping into a new marhala normally (not skipping backwards)
-            if (currentSlide >= 2 && currentSlide < slides.length - 1) {
-                currentAnimationId++;
-                runCinematicReveal(currentSlide, currentAnimationId);
-            }
-        }
-
-        function triggerNextSlide() {
-            if (currentSlide < slides.length - 1) jumpToExactSlide(currentSlide + 1);
-        }
-
-        function triggerPrevSlide() {
-            if (currentSlide > 0) jumpToExactSlide(currentSlide - 1);
-        }
-
-
-        // --- 4. CLOUD SYNCHRONIZATION SYSTEM (PORT 443 + RETAINED STATE) ---
-        const MQTT_TOPIC = "phs-quran-event-2026-sync-state"; 
-        const urlParams = new URLSearchParams(window.location.search);
-        const isRemote = urlParams.get('remote') === 'true';
-        let mqttClient = null;
-
-        if (isRemote) {
-            document.getElementById('remote-ui').style.display = 'flex';
-            document.getElementById('bg-canvas').style.display = 'none';
-            document.getElementById('logo-container').style.display = 'none';
-            document.getElementById('presentation-container').style.display = 'none';
-        }
-
-        function connectToMQTT() {
-            const statusEl = document.getElementById('remote-status');
-            
-            // Connected to Eclipse on PORT 443 (Standard HTTPS port, impossible to block)
-            const clientId = "phs-" + Math.random().toString(16).substr(2, 10);
-            mqttClient = new Paho.MQTT.Client("mqtt.eclipseprojects.io", 443, "/mqtt", clientId);
-
-            mqttClient.onConnectionLost = function (responseObject) {
-                statusEl.className = "status-error";
-                statusEl.innerText = "Connection lost! Reconnecting securely...";
-                setTimeout(connectToMQTT, 2000); 
-            };
-
-            mqttClient.onMessageArrived = function (message) {
-                const payload = JSON.parse(message.payloadString);
+        function goToNextSlide() {
+            if (currentSlide < slides.length - 1) {
+                skipAnimation();
                 
-                // If it's a skip command, skip immediately
-                if (payload.action === "skip") {
-                    if (!isRemote) triggerSkipAnimation();
-                    return;
-                }
+                const oldCounters = slides[currentSlide].querySelectorAll('.stat-number');
+                oldCounters.forEach(c => c.innerText = '0');
 
-                // If it's a slide sync command, sync to that slide
-                if (payload.slide !== undefined) {
-                    if (isRemote) {
-                        currentSlide = payload.slide; // Keep remote tracker updated
-                    } else {
-                        jumpToExactSlide(payload.slide);
-                    }
-                }
-            };
+                slides[currentSlide].classList.remove('active');
+                currentSlide++;
+                slides[currentSlide].classList.add('active');
 
-            mqttClient.connect({
-                useSSL: true,
-                timeout: 5,
-                onSuccess: function () {
-                    statusEl.className = "status-connected";
-                    statusEl.innerText = isRemote ? "SYNCED! Ready to control." : "Connected to Master Sync.";
-                    mqttClient.subscribe(MQTT_TOPIC);
-                },
-                onFailure: function(err) {
-                    statusEl.className = "status-error";
-                    statusEl.innerText = "Retrying connection...";
-                    setTimeout(connectToMQTT, 2000);
-                }
-            });
-        }
-
-        // Only the Remote broadcasts the state. Viewers just listen.
-        function sendSyncCommand(action) {
-            if (mqttClient && mqttClient.isConnected()) {
-                let payloadObj = {};
-                
-                if (action === 'skip') {
-                    payloadObj = { action: "skip", timestamp: Date.now() };
+                if (slides[currentSlide].getAttribute('data-istheme') === 'gold') {
+                    document.body.classList.add('theme-gold-active');
                 } else {
-                    if (action === 'next' && currentSlide < slides.length - 1) currentSlide++;
-                    if (action === 'prev' && currentSlide > 0) currentSlide--;
-                    
-                    payloadObj = { action: "goto", slide: currentSlide, timestamp: Date.now() };
+                    document.body.classList.remove('theme-gold-active');
                 }
 
-                const message = new Paho.MQTT.Message(JSON.stringify(payloadObj));
-                message.destinationName = MQTT_TOPIC;
-                // MAGIC FIX: 'retained=true' saves the state in the cloud. Late joiners get this instantly!
-                if (action !== 'skip') message.retained = true; 
-                
-                mqttClient.send(message);
+                setTimeout(() => animateNumbersForSlide(slides[currentSlide]), 600);
+
+                if (currentSlide >= 2 && currentSlide < slides.length - 1) {
+                    currentAnimationId++;
+                    runCinematicReveal(currentSlide, currentAnimationId);
+                }
             }
         }
 
-        connectToMQTT();
+        function goToPrevSlide() {
+            if (currentSlide > 0) {
+                skipAnimation();
+                const oldCounters = slides[currentSlide].querySelectorAll('.stat-number');
+                oldCounters.forEach(c => c.innerText = '0');
 
+                slides[currentSlide].classList.remove('active');
+                currentSlide--;
+                slides[currentSlide].classList.add('active');
+                
+                if (slides[currentSlide].getAttribute('data-istheme') !== 'gold') {
+                    document.body.classList.remove('theme-gold-active');
+                }
+
+                setTimeout(() => animateNumbersForSlide(slides[currentSlide]), 600);
+            }
+        }
+
+        // --- CONTROLS ---
+        document.body.addEventListener('click', goToNextSlide);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'ArrowRight') goToNextSlide();
+            if (e.code === 'ArrowLeft') goToPrevSlide();
+            if (e.code === 'Enter' || e.code === 'Space') {
+                e.preventDefault();
+                skipAnimation();
+            }
+        });
     </script>
 </body>
 </html>
